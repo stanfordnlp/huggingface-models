@@ -54,7 +54,7 @@ def write_model_card(repo_local_path, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
-    parser.add_argument('--branch', type=str, default="main", help='Directory for loading the CoreNLP models')
+    parser.add_argument('--branch', type=str, default="main", help='Branch to upload models.  Will also update main regardless of this value')
     args = parser.parse_args()
     return args
 
@@ -88,7 +88,8 @@ def push_to_hub():
         try:
             repo.push_to_hub(commit_message="Update tracked files")
         except EnvironmentError as e:
-            if "nothing to commit, working tree clean" in str(e):
+            # tree clean or directory clean depending on version
+            if "nothing to commit, working" in str(e):
                 print(f"{repo_url} is already tracking .jar files")
             else:
                 raise
