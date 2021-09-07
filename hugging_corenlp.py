@@ -15,7 +15,7 @@ import shutil
 from huggingface_hub import  Repository, HfApi, HfFolder
 
 def get_model_card(lang):
-    now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     model_card = """---
 tags:
 - corenlp
@@ -43,6 +43,13 @@ MODELS = {   # the value is a potential alternate name for the file
     "spanish":          "stanford-corenlp-models-current.jar",
 }
 
+def write_model_card(repo_local_path, model):
+    """
+    Write a README for the current model to the given path
+    """
+    readme_path = os.path.join(repo_local_path, "README.md")
+    with open(readme_path, "w") as f:
+        f.write(get_model_card(model))
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -86,15 +93,6 @@ def push_to_hub():
             else:
                 raise
 
-        repo.git_checkout(args.branch, create_branch_ok=True)
-        try:
-            repo.git_pull(rebase=True)
-        except OSError as e:
-            if "There is no tracking information for the current branch" in str(e):
-                print(f"{repo_url} does not yet have branch {args.branch}")
-            else:
-                raise
-
         # Create a copy of the jar file in the repository
         src = f"stanford-corenlp-models-{model}.jar"
         dst = os.path.join(repo_local_path, src)
@@ -111,20 +109,30 @@ def push_to_hub():
         shutil.copy(src, dst)
 
         # Create the model card
-        readme_path = os.path.join(repo_local_path, "README.md")
-        with open(readme_path, "w") as f:
-            f.write(get_model_card(model))
+        write_model_card(repo_local_path, model)
 
         # Push the model
+        # note: the error of not having anything to push will hopefully
+        # never happen since the README is updated to the millisecond
         print("Pushing files to the Hub")
-        try:
+        repo.push_to_hub(commit_message="Add model")
+
+        if args.branch and args.branch != "main":
+            repo.git_checkout(args.branch, create_branch_ok=True)
+            try:
+                repo.git_pull(rebase=True)
+            except OSError as e:
+                if "There is no tracking information for the current branch" in str(e):
+                    print(f"{repo_url} does not yet have branch {args.branch}")
+                else:
+                    raise
+
+            write_model_card(repo_local_path, model)
+            shutil.copy(src, dst)
             repo.push_to_hub(commit_message="Add model")
-            print(f"View your model in {repo_url}")
-        except EnvironmentError as e:
-            if "nothing to commit, working tree clean" in str(e):
-                print(f"{repo_url} already has the latest .jar file in {args.branch}")
-            else:
-                raise            
+
+        print(f"View your model in {repo_url}")
+
 
 if __name__ == '__main__':
     push_to_hub()
