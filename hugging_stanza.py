@@ -20,20 +20,21 @@ def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     model_card = """---
 tags:
-- corenlp
-library_tag: corenlp
+- stanza
+library_tag: stanza
 language:
 - {lang}
 license: GNU
 ---
-# Core NLP model for {lang}
-CoreNLP is your one stop shop for natural language processing in Java! CoreNLP enables users to derive linguistic annotations for text, including token and sentence boundaries, parts of speech, named entities, numeric and time values, dependency and constituency parses, coreference, sentiment, quote attributions, and relations.
-Find more about it in [our website](https://stanfordnlp.github.io/CoreNLP) and our [GitHub repository](https://github.com/stanfordnlp/CoreNLP).
+# Stanza model for {lang}
+Stanza is a collection of accurate and efficient tools for the linguistic analysis of many human languages. Starting from raw text to syntactic analysis and entity recognition, Stanza brings state-of-the-art NLP models to languages of your choosing.
+Find more about it in [our website](https://stanfordnlp.github.io/stanza) and our [GitHub repository](https://github.com/stanfordnlp/stanza).
 
 Last updated {now}
 """.format(lang=lang, now=now)
     return model_card
 
+# TODO: use version to get the available languages
 MODELS = list_available_languages()
 
 def write_model_card(repo_local_path, model):
@@ -128,7 +129,7 @@ def push_to_hub():
         copytree(src, dst)
         repo.push_to_hub(commit_message="Add models")
 
-        print(f"View your model in {repo_url}")
+        print(f"View your model in:\n  {repo_url}\n\n")
 
 if __name__ == '__main__':
     push_to_hub()
