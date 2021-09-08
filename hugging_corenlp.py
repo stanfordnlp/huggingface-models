@@ -54,7 +54,7 @@ def write_model_card(repo_local_path, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
-    parser.add_argument('--branch', type=str, default="main", help='Branch to upload models.  Will also update main regardless of this value')
+    parser.add_argument('--version', type=str, default="4.2.2", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
@@ -85,14 +85,7 @@ def push_to_hub():
 
         # Make sure jar files are tracked with LFS
         repo.lfs_track(["*.jar"])
-        try:
-            repo.push_to_hub(commit_message="Update tracked files")
-        except EnvironmentError as e:
-            # tree clean or directory clean depending on version
-            if "nothing to commit, working" in str(e):
-                print(f"{repo_url} is already tracking .jar files")
-            else:
-                raise
+        repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         # Create a copy of the jar file in the repository
         src = f"stanford-corenlp-models-{model}.jar"
@@ -116,21 +109,13 @@ def push_to_hub():
         # note: the error of not having anything to push will hopefully
         # never happen since the README is updated to the millisecond
         print("Pushing files to the Hub")
-        repo.push_to_hub(commit_message="Add model")
+        repo.push_to_hub(commit_message=f"Add model for version {args.version}")
 
-        if args.branch and args.branch != "main":
-            repo.git_checkout(args.branch, create_branch_ok=True)
-            try:
-                repo.git_pull(rebase=True)
-            except OSError as e:
-                if "There is no tracking information for the current branch" in str(e):
-                    print(f"{repo_url} does not yet have branch {args.branch}")
-                else:
-                    raise
-
-            write_model_card(repo_local_path, model)
-            shutil.copy(src, dst)
-            repo.push_to_hub(commit_message="Add model")
+        tag = "v" + args.version
+        if repo.tag_exists(tag):
+            repo.delete_tag(tag)
+        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}")
+        print(f"Added a tag for the new models: {tag}")
 
         print(f"View your model in {repo_url}")
 
