@@ -68,6 +68,7 @@ def push_to_hub():
     api = HfApi()
 
     for model in MODELS:
+        print(f"Processing {model}")
         # Create the repository
         repo_name = "stanza-" + model
         repo_url = api.create_repo(
@@ -83,19 +84,15 @@ def push_to_hub():
         repo = Repository(repo_local_path, clone_from=repo_url)
         # checkout "main" so that we know we are tracking files correctly
         repo.git_checkout("main")
+        if not repo.is_repo_clean():
+            print("Repo {repo_local_path} is currently not clean.  Unwilling to proceed...")
+            break
         repo.git_pull(rebase=True)
 
         # Make sure jar files are tracked with LFS
         repo.lfs_track(["*.zip"])
         repo.lfs_track(["*.pt"])
-        try:
-            repo.push_to_hub(commit_message="Update tracked files")
-        except EnvironmentError as e:
-            # tree clean or directory clean depending on version
-            if "nothing to commit, working" in str(e):
-                print(f"{repo_url} is already tracking .zip and .pt files")
-            else:
-                raise
+        repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         dst = os.path.join(repo_local_path, "models")
         src = os.path.join(input_dir, model)
@@ -113,21 +110,13 @@ def push_to_hub():
         # note: the error of not having anything to push will hopefully
         # never happen since the README is updated to the millisecond
         print("Pushing files to the Hub")
-        repo.push_to_hub(commit_message="Add model")
+        repo.push_to_hub(commit_message="Add model {args.version}")
 
-        branch = "v" + args.version
-        repo.git_checkout(branch, create_branch_ok=True)
-        try:
-            repo.git_pull(rebase=True)
-        except OSError as e:
-            if "There is no tracking information for the current branch" in str(e):
-                print(f"{repo_url} does not yet have branch {branch}")
-            else:
-                raise
-
-        write_model_card(repo_local_path, model)
-        copytree(src, dst)
-        repo.push_to_hub(commit_message="Add models")
+        tag = "v" + args.version
+        if repo.tag_exists(tag):
+            repo.delete_tag(tag)
+        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}")
+        print(f"Added a tag for the new models: {tag}")
 
         print(f"View your model in:\n  {repo_url}\n\n")
 
