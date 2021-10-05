@@ -35,6 +35,8 @@ Last updated {now}
     return model_card
 
 # TODO: use version to get the available languages
+# TODO: allow the user to specify certain languages
+# TODO: skip languages where the version and the data didn't change
 MODELS = list_available_languages()
 
 def write_model_card(repo_local_path, model):
