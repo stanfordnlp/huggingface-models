@@ -28,6 +28,8 @@ license: gpl-2.0
 CoreNLP is your one stop shop for natural language processing in Java! CoreNLP enables users to derive linguistic annotations for text, including token and sentence boundaries, parts of speech, named entities, numeric and time values, dependency and constituency parses, coreference, sentiment, quote attributions, and relations.
 Find more about it in [our website](https://stanfordnlp.github.io/CoreNLP) and our [GitHub repository](https://github.com/stanfordnlp/CoreNLP).
 
+This card and repo were automatically prepared with `hugging_corenlp.py` in the `stanfordnlp/huggingface-models` repo
+
 Last updated {now}
 """.format(lang=lang, now=now)
     return model_card
@@ -56,7 +58,7 @@ def write_model_card(repo_local_path, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
-    parser.add_argument('--version', type=str, default="4.3.0", help='Version of corenlp models to upload')
+    parser.add_argument('--version', type=str, default="4.3.1", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
