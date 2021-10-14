@@ -24,7 +24,7 @@ tags:
 library_tag: stanza
 language:
 - {lang}
-license: GNU
+license: apache-2.0
 ---
 # Stanza model for {lang}
 Stanza is a collection of accurate and efficient tools for the linguistic analysis of many human languages. Starting from raw text to syntactic analysis and entity recognition, Stanza brings state-of-the-art NLP models to languages of your choosing.
@@ -35,6 +35,8 @@ Last updated {now}
     return model_card
 
 # TODO: use version to get the available languages
+# TODO: allow the user to specify certain languages
+# TODO: skip languages where the version and the data didn't change
 MODELS = list_available_languages()
 
 def write_model_card(repo_local_path, model):
