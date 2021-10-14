@@ -40,7 +40,7 @@ MODELS = {   # the value is a potential alternate name for the file
     "english-kbp":      "stanford-english-kbp-corenlp-models-current.jar",
     "french":           "stanford-french-corenlp-models-current.jar",
     "german":           "stanford-german-corenlp-models-current.jar",
-    "hungaran":         "stanford-hungarian-corenlp-models-current.jar",
+    "hungarian":        "stanford-hungarian-corenlp-models-current.jar",
     "italian":          "stanford-italian-corenlp-models-current.jar",
     "spanish":          "stanford-spanish-corenlp-models-current.jar",
 }
