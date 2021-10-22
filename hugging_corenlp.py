@@ -28,6 +28,8 @@ license: gpl-2.0
 CoreNLP is your one stop shop for natural language processing in Java! CoreNLP enables users to derive linguistic annotations for text, including token and sentence boundaries, parts of speech, named entities, numeric and time values, dependency and constituency parses, coreference, sentiment, quote attributions, and relations.
 Find more about it in [our website](https://stanfordnlp.github.io/CoreNLP) and our [GitHub repository](https://github.com/stanfordnlp/CoreNLP).
 
+This card and repo were automatically prepared with `hugging_corenlp.py` in the `stanfordnlp/huggingface-models` repo
+
 Last updated {now}
 """.format(lang=lang, now=now)
     return model_card
@@ -40,7 +42,9 @@ MODELS = {   # the value is a potential alternate name for the file
     "english-kbp":      "stanford-english-kbp-corenlp-models-current.jar",
     "french":           "stanford-french-corenlp-models-current.jar",
     "german":           "stanford-german-corenlp-models-current.jar",
-    "spanish":          "stanford-corenlp-models-current.jar",
+    "hungarian":        "stanford-hungarian-corenlp-models-current.jar",
+    "italian":          "stanford-italian-corenlp-models-current.jar",
+    "spanish":          "stanford-spanish-corenlp-models-current.jar",
 }
 
 def write_model_card(repo_local_path, model):
@@ -54,7 +58,7 @@ def write_model_card(repo_local_path, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
-    parser.add_argument('--version', type=str, default="4.2.2", help='Version of corenlp models to upload')
+    parser.add_argument('--version', type=str, default="4.3.1", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
@@ -97,7 +101,7 @@ def push_to_hub():
                 new_src = os.path.join(input_dir, MODELS[model])
             else:
                 new_src = MODELS[model]
-            if not os.path.exists(src):
+            if not os.path.exists(new_src):
                 raise FileNotFoundError(f"Cannot find {model} model.  Looked for {src} and {new_src}")
             src = new_src
         shutil.copy(src, dst)
@@ -113,8 +117,8 @@ def push_to_hub():
 
         tag = "v" + args.version
         if repo.tag_exists(tag):
-            repo.delete_tag(tag)
-        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}")
+            repo.delete_tag(tag, remote="origin")
+        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}", remote="origin")
         print(f"Added a tag for the new models: {tag}")
 
         print(f"View your model in {repo_url}")
