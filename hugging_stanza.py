@@ -21,7 +21,8 @@ def get_model_card(lang):
     model_card = """---
 tags:
 - stanza
-library_tag: stanza
+- token-classification
+library_name: stanza
 language:
 - {lang}
 license: apache-2.0
