@@ -4,7 +4,7 @@ This script allows for pushing of the corenlp models to N different huggingface 
 Generously provided by Omar Sanseviero
 
 huggingface-cli login
-python hugging_corenlp.py --input_dir <models_path>  --branch <version>
+python hugging_stanza.py --input_dir <models_path>  --version <version>
 """
 
 import argparse
