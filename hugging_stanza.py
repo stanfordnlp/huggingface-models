@@ -70,7 +70,6 @@ def copytree(src, dst):
 
 
 def push_to_hub():
-    print("HELLO WORLD")
     args = parse_args()
     input_dir = args.input_dir
 
@@ -123,9 +122,9 @@ def push_to_hub():
         repo.push_to_hub(commit_message=f"Add model {args.version}")
 
         tag = "v" + args.version
-        if repo.tag_exists(tag):
-            repo.delete_tag(tag)
-        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}")
+        if repo.tag_exists(tag, remote=repo_url):
+            repo.delete_tag(tag, remote=repo_url)
+        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}", remote=repo_url)
         print(f"Added a tag for the new models: {tag}")
 
         print(f"View your model in:\n  {repo_url}\n\n")
