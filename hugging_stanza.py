@@ -13,11 +13,14 @@ import os
 import shutil
 
 from stanza.resources.common import list_available_languages
+from stanza.models.common.constant import lcode2lang
 
 from huggingface_hub import  Repository, HfApi, HfFolder
 
 def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    full_lang = lcode2lang.get(lang, None)
+    lang_text = f"{full_lang} ({lang})" if full_lang else lang
     model_card = """---
 tags:
 - stanza
@@ -27,14 +30,14 @@ language:
 - {lang}
 license: apache-2.0
 ---
-# Stanza model for {lang}
+# Stanza model for {lang_text}
 Stanza is a collection of accurate and efficient tools for the linguistic analysis of many human languages. Starting from raw text to syntactic analysis and entity recognition, Stanza brings state-of-the-art NLP models to languages of your choosing.
 Find more about it in [our website](https://stanfordnlp.github.io/stanza) and our [GitHub repository](https://github.com/stanfordnlp/stanza).
 
 This card and repo were automatically prepared with `hugging_stanza.py` in the `stanfordnlp/huggingface-models` repo
 
 Last updated {now}
-""".format(lang=lang, now=now)
+""".format(lang=lang, lang_text=lang_text, now=now)
     return model_card
 
 # TODO: use version to get the available languages
@@ -90,7 +93,7 @@ def push_to_hub():
         # checkout "main" so that we know we are tracking files correctly
         repo.git_checkout("main")
         if not repo.is_repo_clean():
-            print("Repo {repo_local_path} is currently not clean.  Unwilling to proceed...")
+            print(f"Repo {repo_local_path} is currently not clean.  Unwilling to proceed...")
             break
         repo.git_pull(rebase=True)
 
@@ -115,7 +118,7 @@ def push_to_hub():
         # note: the error of not having anything to push will hopefully
         # never happen since the README is updated to the millisecond
         print("Pushing files to the Hub")
-        repo.push_to_hub(commit_message="Add model {args.version}")
+        repo.push_to_hub(commit_message=f"Add model {args.version}")
 
         tag = "v" + args.version
         if repo.tag_exists(tag):
