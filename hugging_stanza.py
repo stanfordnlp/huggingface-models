@@ -40,11 +40,6 @@ Last updated {now}
 """.format(lang=lang, lang_text=lang_text, now=now)
     return model_card
 
-# TODO: use version to get the available languages
-# TODO: allow the user to specify certain languages
-# TODO: skip languages where the version and the data didn't change
-MODELS = list_available_languages()
-
 def write_model_card(repo_local_path, model):
     """
     Write a README for the current model to the given path
@@ -57,7 +52,12 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/1.3.1", help='Directory for loading the stanza models')
     parser.add_argument('--version', type=str, default="1.3.1", help='Version of stanza models to upload')
+    parser.add_argument('lang', nargs='*', help='List of languages.  Will default to all languages')
     args = parser.parse_args()
+    if len(args.lang) == 0:
+        # TODO: use version to get the available languages
+        # TODO: skip languages where the version and the data didn't change
+        args.lang = list_available_languages()
     return args
 
 def copytree(src, dst):
@@ -70,12 +70,14 @@ def copytree(src, dst):
 
 
 def push_to_hub():
+    print("HELLO WORLD")
     args = parse_args()
     input_dir = args.input_dir
 
     api = HfApi()
 
-    for model in MODELS:
+    print("Processing languages: {}".format(args.lang))
+    for model in args.lang:
         print(f"Processing {model}")
         # Create the repository
         repo_name = "stanza-" + model
