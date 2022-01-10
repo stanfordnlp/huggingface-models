@@ -11,20 +11,29 @@ import argparse
 import datetime
 import os
 import shutil
+import stanza
 
 from stanza.resources.common import list_available_languages
 from stanza.models.common.constant import lcode2lang
 
 from huggingface_hub import  Repository, HfApi, HfFolder
+from stanza import Pipeline 
 
 def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     full_lang = lcode2lang.get(lang, None)
     lang_text = f"{full_lang} ({lang})" if full_lang else lang
+    tags = get_model_tag(lang)
+    tag_txt = ""
+    for tag in tags:
+        
+        tag_txt += f"- {tag} \n"
+
     model_card = """---
 tags:
 - stanza
 - token-classification
+{tag_txt}
 library_name: stanza
 language:
 - {lang}
@@ -37,7 +46,7 @@ Find more about it in [our website](https://stanfordnlp.github.io/stanza) and ou
 This card and repo were automatically prepared with `hugging_stanza.py` in the `stanfordnlp/huggingface-models` repo
 
 Last updated {now}
-""".format(lang=lang, lang_text=lang_text, now=now)
+""".format(tag_txt=tag_txt, lang=lang, lang_text=lang_text, now=now)
     return model_card
 
 def write_model_card(repo_local_path, model):
@@ -47,6 +56,23 @@ def write_model_card(repo_local_path, model):
     readme_path = os.path.join(repo_local_path, "README.md")
     with open(readme_path, "w") as f:
         f.write(get_model_card(model))
+
+def get_model_tag(lang):
+    args = parse_args()
+    input_dir = args.input_dir
+
+    stanza.download(model_dir = input_dir, lang = lang)
+    model = Pipeline(model_dir= input_dir, lang=lang)
+    config_keys = model.config.keys()
+    tags = []
+    if "ner_model_path" in config_keys:
+        tags.append("ner")
+    if "pos_model_path" in config_keys:
+        tags.append("pos")
+    if "sentiment_model_path" in config_keys:
+        tags.append("sentiment-analysis")
+    return tags
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -131,3 +157,4 @@ def push_to_hub():
 
 if __name__ == '__main__':
     push_to_hub()
+
