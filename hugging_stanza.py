@@ -66,9 +66,9 @@ def get_model_tag(lang):
     config_keys = model.config.keys()
     tags = []
     if "ner_model_path" in config_keys:
-        tags.append("ner")
+        tags.append("named-entity-recognition")
     if "pos_model_path" in config_keys:
-        tags.append("pos")
+        tags.append("part-of-speech-tagging")
     if "sentiment_model_path" in config_keys:
         tags.append("sentiment-analysis")
     return tags
