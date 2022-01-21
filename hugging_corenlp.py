@@ -58,7 +58,7 @@ def write_model_card(repo_local_path, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
-    parser.add_argument('--version', type=str, default="4.3.1", help='Version of corenlp models to upload')
+    parser.add_argument('--version', type=str, default="4.4.0", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
