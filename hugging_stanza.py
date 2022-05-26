@@ -13,21 +13,21 @@ import os
 import shutil
 
 from stanza.resources.common import list_available_languages
-from stanza.models.common.constant import lcode2lang
+from stanza.models.common.constant import lcode2lang, lang2lcode
 
 from huggingface_hub import  Repository, HfApi, HfFolder
 
 def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     full_lang = lcode2lang.get(lang, None)
+    short_lang = lang2lcode.get(lang, lang)
     lang_text = f"{full_lang} ({lang})" if full_lang else lang
     model_card = """---
 tags:
 - stanza
 - token-classification
 library_name: stanza
-language:
-- {lang}
+language: {short_lang}
 license: apache-2.0
 ---
 # Stanza model for {lang_text}
@@ -37,7 +37,7 @@ Find more about it in [our website](https://stanfordnlp.github.io/stanza) and ou
 This card and repo were automatically prepared with `hugging_stanza.py` in the `stanfordnlp/huggingface-models` repo
 
 Last updated {now}
-""".format(lang=lang, lang_text=lang_text, now=now)
+""".format(short_lang=short_lang, lang_text=lang_text, now=now)
     return model_card
 
 def write_model_card(repo_local_path, model):
