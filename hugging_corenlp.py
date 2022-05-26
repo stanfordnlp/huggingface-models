@@ -4,13 +4,15 @@ This script allows for pushing of the corenlp models to N different huggingface 
 Generously provided by Omar Sanseviero
 
 huggingface-cli login
-python hugging_corenlp.py --input_dir <models_path>  --branch <version>
+python3 hugging_corenlp.py --input_dir <models_path>  --branch <version>
 """
 
 import argparse
 import datetime
 import os
 import shutil
+
+from collections import namedtuple
 
 from huggingface_hub import  Repository, HfApi, HfFolder
 
@@ -34,18 +36,24 @@ Last updated {now}
 """.format(lang=lang, now=now)
     return model_card
 
-MODELS = {   # the value is a potential alternate name for the file
-    "arabic":           "stanford-arabic-corenlp-models-current.jar",
-    "chinese":          "stanford-chinese-corenlp-models-current.jar",
-    "english-default":  "stanford-corenlp-models-current.jar",
-    "english-extra":    "stanford-english-corenlp-models-current.jar",
-    "english-kbp":      "stanford-english-kbp-corenlp-models-current.jar",
-    "french":           "stanford-french-corenlp-models-current.jar",
-    "german":           "stanford-german-corenlp-models-current.jar",
-    "hungarian":        "stanford-hungarian-corenlp-models-current.jar",
-    "italian":          "stanford-italian-corenlp-models-current.jar",
-    "spanish":          "stanford-spanish-corenlp-models-current.jar",
-}
+# local_name is a potential alternate name for the file
+# remote_name is the name to use when pushing remotely
+# repo_name is the repo name if corenlp-model is not suitable for some reason
+Model = namedtuple("Model", 'model_name, local_name, remote_name, repo_name')
+
+MODELS = [
+    Model("CoreNLP",          "stanford-corenlp-latest.zip",                     "stanford-corenlp-latest.zip", "CoreNLP"),
+    Model("arabic",           "stanford-arabic-corenlp-models-current.jar",      None,                          None),
+    Model("chinese",          "stanford-chinese-corenlp-models-current.jar",     None,                          None),
+    Model("english-default",  "stanford-corenlp-models-current.jar",             None,                          None),
+    Model("english-extra",    "stanford-english-corenlp-models-current.jar",     None,                          None),
+    Model("english-kbp",      "stanford-english-kbp-corenlp-models-current.jar", None,                          None),
+    Model("french",           "stanford-french-corenlp-models-current.jar",      None,                          None),
+    Model("german",           "stanford-german-corenlp-models-current.jar",      None,                          None),
+    Model("hungarian",        "stanford-hungarian-corenlp-models-current.jar",   None,                          None),
+    Model("italian",          "stanford-italian-corenlp-models-current.jar",     None,                          None),
+    Model("spanish",          "stanford-spanish-corenlp-models-current.jar",     None,                          None),
+]
 
 def write_model_card(repo_local_path, model):
     """
@@ -57,7 +65,7 @@ def write_model_card(repo_local_path, model):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', type=str, default=None, help='Directory for loading the CoreNLP models')
+    parser.add_argument('--input_dir', type=str, default="/home/john/extern_data/corenlp/", help='Directory for loading the CoreNLP models')
     parser.add_argument('--version', type=str, default="4.4.0", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
@@ -69,9 +77,10 @@ def push_to_hub():
 
     api = HfApi()
 
-    for model in MODELS.keys():
+    for model in MODELS:
         # Create the repository
-        repo_name = "corenlp-" + model
+        model_name = model.model_name
+        repo_name = model.repo_name if model.repo_name else "corenlp-%s" % model_name
         repo_url = api.create_repo(
             name=repo_name,
             token=HfFolder.get_token(),
@@ -89,25 +98,26 @@ def push_to_hub():
 
         # Make sure jar files are tracked with LFS
         repo.lfs_track(["*.jar"])
+        repo.lfs_track(["*.zip"])
         repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         # Create a copy of the jar file in the repository
-        src = f"stanford-corenlp-models-{model}.jar"
-        dst = os.path.join(repo_local_path, src)
+        src = f"stanford-corenlp-models-{model_name}.jar"
+        dst = model.remote_name if model.remote_name else os.path.join(repo_local_path, src)
         if input_dir:
             src = os.path.join(input_dir, src)
         if not os.path.exists(src):
             if input_dir:
-                new_src = os.path.join(input_dir, MODELS[model])
+                new_src = os.path.join(input_dir, model.local_name)
             else:
-                new_src = MODELS[model]
+                new_src = model.local_name
             if not os.path.exists(new_src):
-                raise FileNotFoundError(f"Cannot find {model} model.  Looked for {src} and {new_src}")
+                raise FileNotFoundError(f"Cannot find {model_name} model.  Looked for {src} and {new_src}")
             src = new_src
         shutil.copy(src, dst)
 
         # Create the model card
-        write_model_card(repo_local_path, model)
+        write_model_card(repo_local_path, model_name)
 
         # Push the model
         # note: the error of not having anything to push will hopefully
