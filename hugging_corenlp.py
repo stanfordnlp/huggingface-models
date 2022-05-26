@@ -104,18 +104,22 @@ def push_to_hub():
         repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         # Create a copy of the jar file in the repository
-        src = f"stanford-corenlp-models-{model_name}.jar"
         dst = model.remote_name if model.remote_name else os.path.join(repo_local_path, src)
-        if input_dir:
-            src = os.path.join(input_dir, src)
-        if not os.path.exists(src):
+        src_candidates = [f"stanford-corenlp-models-{model_name}.jar",
+                          model.local_name,
+                          # stanford-corenlp-4.4.0-models-arabic.jar
+                          f"stanford-corenlp-{args.version}-models-{model_name}.jar"]
+        for src in src_candidates:
             if input_dir:
-                new_src = os.path.join(input_dir, model.local_name)
+                src = os.path.join(input_dir, src)
+            if os.path.exists(src):
+                break
+        else:
+            if input_dir:
+                locations_searched = ", ".join(os.path.join(input_dir, src) for src in src_candidates)
             else:
-                new_src = model.local_name
-            if not os.path.exists(new_src):
-                raise FileNotFoundError(f"Cannot find {model_name} model.  Looked for {src} and {new_src}")
-            src = new_src
+                locations_searched = ", ".join(src_candidates)
+            raise FileNotFoundError(f"Cannot find {model_name} model.  Looked in {locations_searched}")
         shutil.copy(src, dst)
 
         # Create the model card
