@@ -66,6 +66,7 @@ def write_model_card(repo_local_path, lang, model):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, default="/home/john/extern_data/corenlp/", help='Directory for loading the CoreNLP models')
+    parser.add_argument('--output_dir', type=str, default="/home/john/huggingface/hub", help='Directory with the repos')
     parser.add_argument('--version', type=str, default="4.4.0", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
@@ -90,7 +91,7 @@ def push_to_hub():
         )
 
         # Clone the repository
-        repo_local_path = os.path.join("hub", repo_name)
+        repo_local_path = os.path.join(args.output_dir, repo_name)
 
         repo = Repository(repo_local_path, clone_from=repo_url)
         # checkout "main" so that we know we are tracking files correctly
