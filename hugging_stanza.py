@@ -21,6 +21,7 @@ def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     full_lang = lcode2lang.get(lang, None)
     short_lang = lang2lcode.get(lang, lang)
+    short_lang = short_lang.split("-")[0]
     lang_text = f"{full_lang} ({lang})" if full_lang else lang
     model_card = """---
 tags:
