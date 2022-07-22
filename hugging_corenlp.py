@@ -65,9 +65,11 @@ def write_model_card(repo_local_path, lang, model):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', type=str, default="/home/john/extern_data/corenlp/", help='Directory for loading the CoreNLP models')
-    parser.add_argument('--output_dir', type=str, default="/home/john/huggingface/hub", help='Directory with the repos')
-    parser.add_argument('--version', type=str, default="4.4.0", help='Version of corenlp models to upload')
+    # "/home/john/extern_data/corenlp/"
+    parser.add_argument('--input_dir', type=str, default="/u/nlp/data/StanfordCoreNLPModels", help='Directory for loading the CoreNLP models')
+    # "/home/john/huggingface/hub"
+    parser.add_argument('--output_dir', type=str, default="/u/nlp/software/hub", help='Directory with the repos')
+    parser.add_argument('--version', type=str, default="4.5.0", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
@@ -104,7 +106,7 @@ def push_to_hub():
         repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         # Create a copy of the jar file in the repository
-        dst = model.remote_name if model.remote_name else os.path.join(repo_local_path, src)
+        dst = os.path.join(repo_local_path, model.remote_name) if model.remote_name else os.path.join(repo_local_path, model.local_name)
         src_candidates = [f"stanford-corenlp-models-{model_name}.jar",
                           model.local_name,
                           # stanford-corenlp-4.4.0-models-arabic.jar
@@ -120,6 +122,7 @@ def push_to_hub():
             else:
                 locations_searched = ", ".join(src_candidates)
             raise FileNotFoundError(f"Cannot find {model_name} model.  Looked in {locations_searched}")
+        print(f"Copying model from {src} to {dst}")
         shutil.copy(src, dst)
 
         # Create the model card
