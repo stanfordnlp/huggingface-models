@@ -106,7 +106,7 @@ def push_to_hub():
         repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
 
         # Create a copy of the jar file in the repository
-        dst = os.path.join(repo_local_path, model.remote_name) if model.remote_name else os.path.join(repo_local_path, model.local_name)
+        dst = os.path.join(repo_local_path, model.remote_name) if model.remote_name else os.path.join(repo_local_path, f"stanford-corenlp-models-{model_name}.jar")
         src_candidates = [f"stanford-corenlp-models-{model_name}.jar",
                           model.local_name,
                           # stanford-corenlp-4.4.0-models-arabic.jar
