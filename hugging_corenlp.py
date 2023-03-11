@@ -69,7 +69,7 @@ def parse_args():
     parser.add_argument('--input_dir', type=str, default="/u/nlp/data/StanfordCoreNLPModels", help='Directory for loading the CoreNLP models')
     # "/home/john/huggingface/hub"
     parser.add_argument('--output_dir', type=str, default="/u/nlp/software/hub", help='Directory with the repos')
-    parser.add_argument('--version', type=str, default="4.5.2", help='Version of corenlp models to upload')
+    parser.add_argument('--version', type=str, default="4.5.3", help='Version of corenlp models to upload')
     args = parser.parse_args()
     return args
 
