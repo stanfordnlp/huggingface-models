@@ -64,7 +64,7 @@ def write_model_card(repo_local_path, lang, model):
         f.write(get_model_card(lang, model))
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # "/home/john/extern_data/corenlp/"
     parser.add_argument('--input_dir', type=str, default="/u/nlp/data/StanfordCoreNLPModels", help='Directory for loading the CoreNLP models')
     # "/home/john/huggingface/hub"

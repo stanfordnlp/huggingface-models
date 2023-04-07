@@ -50,7 +50,7 @@ def write_model_card(repo_local_path, model):
         f.write(get_model_card(model))
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/1.5.0", help='Directory for loading the stanza models')
     parser.add_argument('--version', type=str, default="1.5.0", help='Version of stanza models to upload')
     parser.add_argument('lang', nargs='*', help='List of languages.  Will default to all languages')
