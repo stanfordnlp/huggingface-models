@@ -70,17 +70,22 @@ def parse_args():
     # "/home/john/huggingface/hub"
     parser.add_argument('--output_dir', type=str, default="/u/nlp/software/hub", help='Directory with the repos')
     parser.add_argument('--version', type=str, default="4.5.4", help='Version of corenlp models to upload')
+    parser.add_argument('--no_models', dest="models", action='store_false', default=True, help="Only push the package without updating the models.  Useful for when a new version is released, with only code changes, and the 'latest' symlink wasn't properly updated")
     args = parser.parse_args()
     return args
 
 
 def push_to_hub():
     args = parse_args()
-    input_dir = args.input_dir
-
     api = HfApi()
 
-    for model in MODELS:
+    input_dir = args.input_dir
+    if args.models:
+        stuff_to_push = MODELS
+    else:
+        stuff_to_push = [x for x in MODELS if x.model_name == 'CoreNLP']
+
+    for model in stuff_to_push:
         # Create the repository
         lang = model.lang
         model_name = model.model_name
