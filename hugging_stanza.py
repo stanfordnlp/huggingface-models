@@ -81,10 +81,10 @@ def push_to_hub():
         print(f"Processing {model}")
         # Create the repository
         repo_name = "stanza-" + model
+        repo_id = "stanfordnlp/" + repo_name
         repo_url = api.create_repo(
-            name=repo_name,
+            repo_id=repo_id,
             token=HfFolder.get_token(),
-            organization="stanfordnlp",
             exist_ok=True,
         )
 
