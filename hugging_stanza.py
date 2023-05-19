@@ -9,13 +9,13 @@ python hugging_stanza.py --input_dir <models_path>  --version <version>
 
 import argparse
 import datetime
-import os
 import shutil
+from pathlib import Path
 
 from stanza.resources.common import list_available_languages
 from stanza.models.common.constant import lcode2lang, lang2lcode
 
-from huggingface_hub import  Repository, HfApi, HfFolder
+from huggingface_hub import HfApi
 
 def get_model_card(lang):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -41,14 +41,6 @@ Last updated {now}
 """.format(short_lang=short_lang, lang_text=lang_text, now=now)
     return model_card
 
-def write_model_card(repo_local_path, model):
-    """
-    Write a README for the current model to the given path
-    """
-    readme_path = os.path.join(repo_local_path, "README.md")
-    with open(readme_path, "w") as f:
-        f.write(get_model_card(model))
-
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/1.5.0", help='Directory for loading the stanza models')
@@ -61,18 +53,10 @@ def parse_args():
         args.lang = list_available_languages()
     return args
 
-def copytree(src, dst):
-    if os.path.exists(dst):
-        print(f"Cleaning up existing {dst}")
-        shutil.rmtree(dst)
-    # copy all of the models for this subdir
-    print(f"Copying models from {src} to {dst}")
-    shutil.copytree(src, dst)
-
-
 def push_to_hub():
     args = parse_args()
     input_dir = args.input_dir
+    new_tag_name = "v" + args.version
 
     api = HfApi()
 
@@ -82,52 +66,32 @@ def push_to_hub():
         # Create the repository
         repo_name = "stanza-" + model
         repo_id = "stanfordnlp/" + repo_name
-        repo_url = api.create_repo(
-            repo_id=repo_id,
-            token=HfFolder.get_token(),
-            exist_ok=True,
-        )
+        repo_url = api.create_repo(repo_id=repo_id, exist_ok=True)
 
-        # Clone the repository
-        repo_local_path = os.path.join("hub", repo_name)
-
-        repo = Repository(repo_local_path, clone_from=repo_url)
-        # checkout "main" so that we know we are tracking files correctly
-        repo.git_checkout("main")
-        if not repo.is_repo_clean():
-            print(f"Repo {repo_local_path} is currently not clean.  Unwilling to proceed...")
-            break
-        repo.git_pull(rebase=True)
-
-        # Make sure jar files are tracked with LFS
-        repo.lfs_track(["*.zip"])
-        repo.lfs_track(["*.pt"])
-        repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
-
-        dst = os.path.join(repo_local_path, "models")
-        src = os.path.join(input_dir, model)
-        if not os.path.exists(src):
+        # Find src folder
+        src = Path(input_dir) / model
+        if not src.exists(src):
             if not input_dir:
                 raise FileNotFoundError(f"Could not find models under {src}.  Perhaps you forgot to set --input_dir?")
             else:
                 raise FileNotFoundError(f"Could not find models under {src}")
-        copytree(src, dst)
 
-        # Create the model card
-        write_model_card(repo_local_path, model)
+        # Update model card in it
+        (src / "README.md).write_text(get_model_card(model))
 
-        # Push the model
-        # note: the error of not having anything to push will hopefully
-        # never happen since the README is updated to the millisecond
-        print("Pushing files to the Hub")
-        repo.push_to_hub(commit_message=f"Add model {args.version}")
+        # Upload model + model card
+        api.upload_folder(repo_id=repo_id, folder_path=src, version=f"Add model {args.version}")
 
-        tag = "v" + args.version
-        if repo.tag_exists(tag, remote=repo_url):
-            repo.delete_tag(tag, remote=repo_url)
-        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}", remote=repo_url)
-        print(f"Added a tag for the new models: {tag}")
-
+        # Check and delete tag if already exist
+        refs = api.list_repo_refs(repo_id=repo_id)
+        for tag in refs.tags:
+            if tag.name == new_tag_name:
+                api.delete_tag(repo_id=repo_id, tag=new_tag_name)
+                break
+        
+        # Tag model version
+        api.create_tag(repo_id=repo_id, tag=new_tag_name, tag_message=f"Adding new version of models {tag}")
+        print(f"Added a tag for the new models: {new_tag_name}")
         print(f"View your model in:\n  {repo_url}\n\n")
 
 if __name__ == '__main__':
