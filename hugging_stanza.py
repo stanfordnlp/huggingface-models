@@ -51,8 +51,8 @@ def write_model_card(repo_local_path, model):
 
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/1.5.0", help='Directory for loading the stanza models')
-    parser.add_argument('--version', type=str, default="1.5.0", help='Version of stanza models to upload')
+    parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/", help='Directory for loading the stanza models.  Will first try input_dir + version, if that exists')
+    parser.add_argument('--version', type=str, default="1.5.1", help='Version of stanza models to upload')
     parser.add_argument('lang', nargs='*', help='List of languages.  Will default to all languages')
     args = parser.parse_args()
     if len(args.lang) == 0:
@@ -73,6 +73,9 @@ def copytree(src, dst):
 def push_to_hub():
     args = parse_args()
     input_dir = args.input_dir
+    if os.path.exists(input_dir + args.version):
+        input_dir = input_dir + args.version
+        print("Found directory in %s - using that instead of %s" % (input_dir, args.input_dir))
 
     api = HfApi()
 
