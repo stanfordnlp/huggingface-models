@@ -14,7 +14,7 @@ import shutil
 
 from collections import namedtuple
 
-from huggingface_hub import  Repository, HfApi, HfFolder
+from huggingface_hub import  HfApi, HfFolder, hf_hub_download
 
 def get_model_card(lang, model):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -75,6 +75,18 @@ def parse_args():
     return args
 
 
+def maybe_add_lfs(api, repo_id, repo_local_path, extension):
+    # read the existing .gitattributes file
+    git_filename = os.path.join(repo_local_path, ".gitattributes")
+    with open(git_filename) as fin:
+        lines = fin.readlines()
+
+    # if the extension isn't already there, add it and push the new version
+    if not any(line.startswith(extension + " ") for line in lines):
+        lines.append("%s filter=lfs diff=lfs merge=lfs -text\n" % extension)
+        blob = "".join(lines).encode()
+        api.upload_file(repo_id=repo_id, path_in_repo=".gitattributes", path_or_fileobj=blob)
+
 def push_to_hub():
     args = parse_args()
     api = HfApi()
@@ -96,18 +108,15 @@ def push_to_hub():
             exist_ok=True,
         )
 
-        # Clone the repository
+        # check the lfs status of .zip and .jar
+        # TODO: we can probably get rid of repo_local_path
+        # - use a temporary file for .gitattributes
+        # - use a bytes blob for the README
+        # - use the jar / zip file for CoreNLP directly, wherever it is
         repo_local_path = os.path.join(args.output_dir, repo_name)
-
-        repo = Repository(repo_local_path, clone_from=repo_url)
-        # checkout "main" so that we know we are tracking files correctly
-        repo.git_checkout("main")
-        repo.git_pull(rebase=True)
-
-        # Make sure jar files are tracked with LFS
-        repo.lfs_track(["*.jar"])
-        repo.lfs_track(["*.zip"])
-        repo.push_to_hub(commit_message="Update tracked files", clean_ok=True)
+        hf_hub_download(repo_id, ".gitattributes", local_dir=repo_local_path, local_dir_use_symlinks=False)
+        maybe_add_lfs(api, repo_id, repo_local_path, '*.jar')
+        maybe_add_lfs(api, repo_id, repo_local_path, '*.zip')
 
         # Create a copy of the jar file in the repository
         dst = os.path.join(repo_local_path, model.remote_name) if model.remote_name else os.path.join(repo_local_path, f"stanford-corenlp-models-{model_name}.jar")
