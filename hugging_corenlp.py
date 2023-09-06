@@ -90,10 +90,9 @@ def push_to_hub():
         lang = model.lang
         model_name = model.model_name
         repo_name = model.repo_name if model.repo_name else "corenlp-%s" % model_name
+        repo_id = "stanfordnlp/" + repo_name
         repo_url = api.create_repo(
-            name=repo_name,
-            token=HfFolder.get_token(),
-            organization="stanfordnlp",
+            repo_id=repo_id,
             exist_ok=True,
         )
 
@@ -133,17 +132,24 @@ def push_to_hub():
         # Create the model card
         write_model_card(repo_local_path, lang, model_name)
 
-        # Push the model
+        # Upload model + model card
+        # setting delete_patterns will clean up old model files as we go
         # note: the error of not having anything to push will hopefully
         # never happen since the README is updated to the millisecond
-        print("Pushing files to the Hub")
-        repo.push_to_hub(commit_message=f"Add model for version {args.version}")
+        print("Pushing files to the Hub from %s to %s" % (repo_local_path, repo_id))
+        api.upload_folder(repo_id=repo_id, folder_path=repo_local_path, commit_message=f"Add model {args.version}")
 
-        tag = "v" + args.version
-        if repo.tag_exists(tag):
-            repo.delete_tag(tag, remote="origin")
-        repo.add_tag(tag_name=tag, message=f"Adding new version of models {tag}", remote="origin")
-        print(f"Added a tag for the new models: {tag}")
+        # Check and delete tag if already exist
+        new_tag_name = "v" + args.version
+        refs = api.list_repo_refs(repo_id=repo_id)
+        for tag in refs.tags:
+            if tag.name == new_tag_name:
+                api.delete_tag(repo_id=repo_id, tag=new_tag_name)
+                break
+
+        # Tag model version
+        api.create_tag(repo_id=repo_id, tag=new_tag_name, tag_message=f"Adding new version of models {new_tag_name}")
+        print(f"Added a tag for the new models: {new_tag_name}")
 
         print(f"View your model in {repo_url}")
 
