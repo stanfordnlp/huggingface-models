@@ -97,7 +97,7 @@ def push_to_hub():
             if tag.name == new_tag_name:
                 api.delete_tag(repo_id=repo_id, tag=new_tag_name)
                 break
-        
+
         # Tag model version
         api.create_tag(repo_id=repo_id, tag=new_tag_name, tag_message=f"Adding new version of models {new_tag_name}")
         print(f"Added a tag for the new models: {new_tag_name}")
