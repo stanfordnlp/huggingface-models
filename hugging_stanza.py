@@ -45,7 +45,7 @@ Last updated {now}
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input_dir', type=str, default="/u/nlp/software/stanza/models/", help='Directory for loading the stanza models.  Will first try input_dir + version, if that exists')
-    parser.add_argument('--version', type=str, default="1.8.0", help='Version of stanza models to upload')
+    parser.add_argument('--version', type=str, default="1.10.0", help='Version of stanza models to upload')
     parser.add_argument('lang', nargs='*', help='List of languages.  Will default to all languages')
     args = parser.parse_args()
     if len(args.lang) == 0:
