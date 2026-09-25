@@ -14,7 +14,7 @@ import shutil
 
 from collections import namedtuple
 
-from huggingface_hub import  HfApi, HfFolder, hf_hub_download
+from huggingface_hub import  HfApi, hf_hub_download
 
 def get_model_card(lang, model):
     now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
