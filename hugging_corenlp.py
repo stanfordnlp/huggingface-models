@@ -45,6 +45,7 @@ MODELS = [
     Model("CoreNLP",          "en",   "stanford-corenlp-latest.zip",                     "stanford-corenlp-latest.zip", "CoreNLP"),
     Model("arabic",           "ar",   "stanford-arabic-corenlp-models-current.jar",      None,                          None),
     Model("chinese",          "zh",   "stanford-chinese-corenlp-models-current.jar",     None,                          None),
+    Model("chinese-extra",    "zh",   "stanford-chinese-extra-models-current.jar",       None,                          None),
     Model("english-default",  "en",   "stanford-corenlp-models-current.jar",             None,                          None),
     Model("english-extra",    "en",   "stanford-english-corenlp-models-current.jar",     None,                          None),
     Model("english-kbp",      "en",   "stanford-english-kbp-corenlp-models-current.jar", None,                          None),
@@ -69,7 +70,7 @@ def parse_args():
     parser.add_argument('--input_dir', type=str, default="/u/nlp/data/StanfordCoreNLPModels", help='Directory for loading the CoreNLP models')
     # "/home/john/huggingface/hub"
     parser.add_argument('--output_dir', type=str, default="/u/nlp/software/hub", help='Directory with the repos')
-    parser.add_argument('--version', type=str, default="4.5.8", help='Version of corenlp models to upload')
+    parser.add_argument('--version', type=str, default="4.6.0", help='Version of corenlp models to upload')
     parser.add_argument('--no_models', dest="models", action='store_false', default=True, help="Only push the package without updating the models.  Useful for when a new version is released, with only code changes, and the 'latest' symlink wasn't properly updated")
     args = parser.parse_args()
     return args
